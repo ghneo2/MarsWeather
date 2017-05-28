@@ -1,0 +1,483 @@
+FORMAT: 1A
+HOST: http://polls.apiblueprint.org/
+
+# mars-weather-machines
+
+Polls is a simple API allowing consumers to view polls and vote in them.
+
+## Authentication [/v1/login]
+
+### Login authentication [POST]
+
++ Request (application/json)
+
+    + Headers
+    
+            api_key: string
+    
+    + Body
+    
+            {   "username":"user1",
+                "password":"passwd1"
+            }
+    
++ Response 200 (application/json)
+
+    + Body 
+    
+            {  "auth_key": "2e5db4a3-c80f-4cfe-ad35-7e781928f7a2"
+            }
+
++ Response 401 (application/json)
+
+    + Body
+    
+            {   "errcode": 401,
+                "error":"Unathorized"
+            }
+ 
+
+## Weather Machines [/v1/machines]
+
+The API add a new weather machine record. 
+Machine data must include location coordinate, machine code and unique ID.
+Access is only allowed with valid authentication token.
+
+### Add Weather Machine [POST]
+
++ Attributes
+
+        + lng (number, required) - longitude
+        + lat (number, required) - latitude
+        + dateDeployed (string, required) - Date machine is deployed
+        + machineCode (string, required) - Unique Machine Name
+        
++ Request (application/json)
+
+    + Headers
+
+            X-API-Key-Token: 2e5db4a3-c80f-4cfe-ad35-7e781928f7a2
+
+    + Body
+    
+            {   "coord" : { 
+                    "lng":40.0123,
+                    "lat":70.0999
+                 },
+                "dateDeployed":"2017-04-15T21:00:00",
+                "machineCode":"Curiousity"
+            }
+
++ Response 201 (application/json)
+
+    + Headers
+
+            Location: /v1/machines/1
+            
+    + Body 
+    
+            {  "data": { 
+                    "machineId":1,
+                    "coord": { 
+                        "lng":40.0123,
+                        "lat":70.0999
+                    },
+                    "dateDeployed":"2017-04-15T21:00:00",
+                    "machineCode":"Curiousity"
+                },
+                "dateCreated":"2017-04-16T20:00:00",
+                "url":"/v1/machines/1"
+            }
+
++ Response 400
++ Response 401 (application/json)
+    + Body
+
+            {   "code": 401,
+                "message":"Authentication Required"
+            }
++ Response 404
++ Response 500            
+
+### List All Weather Machines [GET]
+
+The API list all weather machines records. 
+Machine data must include location coordinate, machine code 
+and unique machine ID. 
+
++ Relation: self
++ Response 200 (application/json)
+
+    + Body 
+    
+            [  
+                {  
+                    "machineId":1,
+                    "coord" : { 
+                        "lng":40.0123,
+                        "lat":70.0999
+                    },
+                    "dateDeployed":"2017-04-15T21:00:00",
+                    "machineCode":"Curiousity"
+                },
+                {  
+                    "machineId":2,
+                    "coord" : { 
+                        "lng":40.0123,
+                        "lat":70.0999
+                    },
+                    "dateDeployed":"2017-04-20T21:00:00",
+                    "machineCode":"Visionary"
+                 }
+            ]
+
++ Response 400
++ Response 404
++ Response 500        
+
+## Weather Machines [/v1/machines/{machineId}]
+
+### Get Weather Machine by ID [GET]
+
+The API return a weather machine record. 
+Machine data must include location coordinate, 
+machine code and unique machine ID. 
+
++ Parameters
+    + machineId (number, required) - ID of specific weather machine
+
++ Response 200 (application/json)
+
+        {  
+            "machineId":1,
+            "coord" : { 
+                "lng":40.0123,
+                "lat":70.0999
+            },
+            "dateDeployed":"2017-04-15T21:00:00",
+            "machineCode":"Curiousity"
+        }
+
++ Response 400
++ Response 404
++ Response 500    
+
+### Update Weather Machine by ID [PUT]
+
+The API update a specific weather machine location and 
+deployment/re-deployment date, given its machineID.  
+Access is only allowed with valid authentication token.
+
++ Attributes
+
+        + lng (number, required) - Longitude
+        + lat (number, required) - Latitude
+        + dateDeployed (string, required) - Date machine is deployed
+
++ Parameters
+    + machineId (number) - ID of specific weather machine
+
++ Request (application/json)
+
+    + Headers
+
+            X-API-Key-Token: 2e5db4a3-c80f-4cfe-ad35-7e781928f7a2
+
+    + Body
+    
+            {  
+                "coord" : { 
+                "lng":40.0123,
+                "lat":70.0999
+                },
+            "dateDeployed":"2017-04-15T21:00:00"
+            }
+
++ Response 200 (application/json)
+    + Body 
+
+            {
+                "data": {
+                    "machineId":2,
+                    "coord" : { 
+                        "lng":40.0123,
+                        "lat":70.0999
+                    },
+                    "dateDeployed":"2017-04-20T21:00:00",
+                    "machineCode":"Visionary"
+                 },
+                 "dateUpdated":"2017-04-16T20:00:00"
+            }     
+
++ Response 204
++ Response 400
++ Response 401 (application/json)
+    + Body
+
+            {   "code": 401,
+                "message":"Authentication Required"
+            }
++ Response 404
++ Response 500
+
+### Delete Weather Machine by ID [DELETE]
+
+The API delete a specific weather machine record, given its machineID.  
+
++ Relation: delete
++ Parameters
+    + machineId (number) - ID of specific weather machine
+    
++ Request
+
+    + Headers
+
+            X-Auth-Token: 2e5db4a3-c80f-4cfe-ad35-7e781928f7a2
+
++ Response 204
++ Response 401 (application/json)
+
+    + Body
+    
+            {   "code": 401,
+                "message":"Authentication Required"
+            }
+
++ Response 404
++ Response 500
+            
+
+## Weather Data [/v1/weather/{machineId}]
+
+### Add Weather Data by specific machine ID [POST]
+
+The API add a Weather data received from specific registered machines. 
+Weather data must include temperature, mars sol, season, pressure, 
+wind speed, humidity and opacity.
+A unique id is assigned to each weather record.
+Only allowed from access with valid authentication token.
+
++ Parameters
+    + machineId (number, required) - ID of specific weather machine
+
++ Request (Application/json)
+
+    + Headers
+
+            X-API-Key-Token: 2e5db4a3-c80f-4cfe-ad35-7e781928f7a2
+
+    + Body
+    
+            {  
+                "dateLogged":"2017-04-18T00:00:00",
+                "machineId":1,
+                "sol":1680,
+                "season":349,
+                "minTemp":-77,
+                "maxTemp":-4,
+                "pressure":831,
+                "humidity":10,
+                "windSpeed":2,
+                "windDirection":80,
+                "atmoOpacity":0.2
+            }
+
++ Response 201 (Application/json)
+
+    + Attribute 
+    
+        + id (number) - unique Id assigned to each weather data added.
+
+    + Body
+    
+            {
+            
+                "data": {  
+                    "id":1,
+                    "dateLogged":"2017-04-18T00:00:00",
+                    "machineId":1,
+                    "sol":1680,
+                    "season":349,
+                    "minTemp":-77,
+                    "maxTemp":-4,
+                    "pressure":831,
+                    "humidity":10,
+                    "windSpeed":2,
+                    "windDirection":80,
+                    "atmoOpacity":0.2
+                },
+                "dateCreated":"2017-04-18T00:00:10"
+            }
+    
++ Response 400
++ Response 401 (application/json)
+
+    + Body
+    
+            {   "code": 401,
+                "message":"Authentication Required"
+            }
+
++ Response 404
++ Response 500
+
+### Get latest Weather Data by specific machine ID [GET]
+
+The API return the latest weather data from a specific weather machines. 
+Weather data must include temperature, mars sol, season, pressure, 
+wind speed, humidity and opacity.
+
++ Parameters
+    + machineId (number, required) - ID of specific weather machine
+
++ Response 200 (application/json)
+
+    + Body
+    
+            {   "id":1,
+                "dateLogged":"2017-04-18T00:00:00",
+                "machineId":1,
+                "sol":1680,
+                "season":349,
+                "minTemp":-77,
+                "maxTemp":-4,
+                "pressure":831,
+                "humidity":10,
+                "windSpeed":2,
+                "windDirection":80,
+                "atmoOpacity":0.2
+            }
+
++ Response 400
++ Response 404
++ Response 500
+
+## Weather Data for 0.5 sol [/v1/weather/{machineId}?sol=0.5&limit=10]        
+
+### Get Weather Data for last 0.5 sol by page of 10 records and machine ID [GET]
+
+The API return the last 0.5 sol weather data from a specific weather machine,
+by page of 10 records. Weather data must include temperature, mars sol, 
+season, pressure, wind speed, humidity and opacity.
+
++ Parameters
+    + machineId (number, required) - ID of specific weather machine
+
++ Attributes
+    + sol (string, required) - 0.5 mar day
+    + limit (number, optional) - default is 10
+    + page (number, optional) - default is page 1
+
++ Response 200 (Application/json)
+
+    + Body 
+    
+            { "data": [  
+                    {  
+                        "id":1,
+                        "dateLogged":"2017-04-18T00:00:00",
+                        "machineId":1,
+                        "sol":1680,
+                        "season":349,
+                        "minTemp":-77,
+                        "maxTemp":-4,
+                        "pressure":831,
+                        "humidity":10,
+                        "windSpeed":2,
+                        "windDirection":80,
+                        "atmoOpacity":0.2
+                    },
+                    {  
+                        "id":2,
+                        "dateLogged":"2017-04-18T01:00:00",
+                        "machineId":1,
+                        "sol":1680,
+                        "season":349,
+                        "minTemp":-77,
+                        "maxTemp":-4,
+                        "pressure":831,
+                        "humidity":10,
+                        "windSpeed":2,
+                        "windDirection":80,
+                        "atmoOpacity":0.2
+                    }
+                ],
+                "paging": {
+                    "current": "/v1/weather/{ machineId}?sol=0.5&limit=10&page=1",
+                    "next": "/v1/weather/{ machineId}?sol=0.5&limit=10&page=2"
+                }
+             }
+             
++ Response 204
++ Response 400
++ Response 404
++ Response 500
+
+
+## Weather Data by Date Range [/v1/weather/{machineId}?startDate=2017-05-10&endDate=2017-05-15&limit=10]      
+
+### Get archived Weather Data with start/end date range by page of 10 records and machine ID [GET]
+
+The API return the weather data from a specific weather machine for a given
+archived date range, by page of 10 records. Weather data must include 
+temperature, mars sol, season, pressure, wind speed, humidity and opacity.
+
++ Parameters
+    + machineId (number, required) - ID of specific weather machine
+
++ Attributes
+    + startDate (string, required) - Start date of date range
+    + endDate (string, required) - End date of date range
+    + limit (number, optional) - default is 10
+    + page (number, optional) - default is page 1
+
++ Response 200 (Application/json)
+
+    + Attributes
+        + humidity (number) - unit %
+        + pressure (number) - unit Pa
+        + windSpeed (number) - unit Km/h
+        + sol (number) - Mars solar day
+
+    + Body 
+    
+            { "data": 
+                [  
+                    {  
+                        "id":1,
+                        "dateLogged":"2017-04-18T00:00:00",
+                        "machineId":1,
+                        "sol":1680,
+                        "season":349,
+                        "minTemp":-77,
+                        "maxTemp":-4,
+                        "pressure":831,
+                        "humidity":10,
+                        "windSpeed":2,
+                        "windDirection":80,
+                        "atmoOpacity":0.2
+                    },
+                    {  
+                        "id":2,
+                        "dateLogged":"2017-04-18T01:00:00",
+                        "machineId":1,
+                        "sol":1680,
+                        "season":349,
+                        "minTemp":-77,
+                        "maxTemp":-4,
+                        "pressure":831,
+                        "humidity":10,
+                        "windSpeed":2,
+                        "windDirection":80,
+                        "atmoOpacity":0.2
+                    }
+                ],
+                "paging": {
+                    "current": "/v1/weather/{machineId}?dateStart=2017-05-10&dateEnd=2017-05-15&limit=10&page=1",
+                    "next": "/v1/weather/{machineId}?dateStart=2017-05-10&dateEnd=2017-05-15&limit=10&page=2"
+                }
+             }
+
++ Response 400
++ Response 404
++ Response 500
